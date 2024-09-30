@@ -1,0 +1,27 @@
+{
+  "name": "simplephp/payment",
+  "description": "支付聚合 SDK PHP版本，支持微信、支付宝(包括商家/周期扣款)",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Simplephp\\PaymentSdk\\": "src/"
+    },
+    "files": [
+      "src/functions.php"
+    ]
+  },
+  "authors": [
+    {
+      "name": "Qiang Todd",
+      "email": "askyiwang@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1.2",
+    "ext-json": "*",
+    "wechatpay/wechatpay": "^1.4.10",
+    "simplephp/easyalipaysdk": "^2.2.5",
+    "ext-openssl": "*"
+  }
+}

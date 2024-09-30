@@ -2,8 +2,6 @@
 
 namespace Simplephp\PaymentSdk\Provider;
 
-use Alipay\EasySDK\Payment\Common\Models\AlipayTradeCancelResponse;
-use Alipay\EasySDK\Util\Generic\Models\AlipayOpenApiGenericResponse;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\InflateStream;
 use GuzzleHttp\Psr7\Uri;

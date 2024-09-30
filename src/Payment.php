@@ -6,7 +6,6 @@ use Simplephp\PaymentSdk\Provider\Alipay;
 use Simplephp\PaymentSdk\Provider\Wechat;
 
 /**
- * https://github.com/helei112g/payment/blob/master/src/Client.php
  * Class Payment
  * @package Simplephp\PaymentSdk
  * @method static Alipay alipay(string $merchant = 'default')

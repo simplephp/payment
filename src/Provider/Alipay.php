@@ -6,7 +6,6 @@ use AlibabaCloud\Tea\Model;
 use Alipay\EasySDK\Kernel\Config;
 use Alipay\EasySDK\Kernel\MultipleFactory;
 use Simplephp\PaymentSdk\Abstracts\APayment;
-use Simplephp\PaymentSdk\Abstracts\APayNotify;
 use Simplephp\PaymentSdk\Contracts\INotify;
 use Simplephp\PaymentSdk\Models\Response;
 

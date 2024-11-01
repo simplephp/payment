@@ -28,46 +28,6 @@ class Payment
     ];
 
     /**
-     * 支付宝APP支付
-     */
-    const ALIPAY_APP_PAY = 'ALIPAY_APP_PAY';
-
-    /**
-     * 支付宝APP支付签名方式
-     */
-    const ALIPAY_APP_PAY_SIGN = 'ALIPAY_APP_PAY_SIGN';
-
-    /**
-     * 支付宝wap支付
-     */
-    const ALIPAY_WAP_PAY = 'ALIPAY_WAP_PAY';
-    /**
-     * 支付宝web支付
-     */
-    const ALIPAY_WEB_PAY = 'ALIPAY_WEB_PAY';
-    /**
-     * 支付宝qr支付
-     */
-    const ALIPAY_QR_PAY = 'ALIPAY_QR_PAY';
-
-    /**
-     * 微信APP支付
-     */
-    const WECHAT_APP_PAY = 'WECHAT_APP_PAY';
-    /**
-     * 线下场所、公众号场景和PC网站场景
-     */
-    const WECHAT_JSAPI_PAY = 'WECHAT_JSAPI_PAY';
-    /**
-     * 微信wap支付
-     */
-    const WECCHAT_WAP_PAY = 'WECCHAT_WAP_PAY';
-    /**
-     * 微信小程序支付
-     */
-    const WECCHAT_QR_PAY = 'WECCHAT_QR_PAY';
-
-    /**
      * @param array $config
      * @return string
      */

@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Simplephp\PaymentSdk\Abstracts\APayment;
 use Simplephp\PaymentSdk\Contracts\INotify;
 use Simplephp\PaymentSdk\Models\Response;
+use Simplephp\PaymentSdk\Util\Helper;
 use WeChatPay\Builder;
 use WeChatPay\BuilderChainable;
 use WeChatPay\Crypto\AesGcm;
@@ -146,7 +147,7 @@ class Wechat extends APayment
             throw new \InvalidArgumentException('微信商户APIv3密钥不能为空');
         }
         $this->apiV3Key = $apiV3Key;
-        $merchantPrivateKeyFilePath = $config['merchant_private_key_file_path'] ?? '';
+        $merchantPrivateKeyFilePath = $config['merchant_private_key_path'] ?? '';
         if (empty($merchantPrivateKeyFilePath)) {
             throw new \InvalidArgumentException('微信商户私钥文件路径不能为空');
         }
@@ -680,7 +681,7 @@ class Wechat extends APayment
         if (!isset($params['bill_date'])) {
             throw new \InvalidArgumentException('账单时间不能为空');
         }
-        if (!isValidDateTime($params['bill_date'], 'Y-m-d')) {
+        if (!Helper::isValidDateTime($params['bill_date'], 'Y-m-d')) {
             throw new \InvalidArgumentException('账单时间格式错误');
         }
         $businessOptions = [];
@@ -903,8 +904,12 @@ class Wechat extends APayment
         $notifyType = $this->getNotifyType($inBodyArray['event_type']);
         $classNotifyType = $notifyCallback->getNotifyType();
         if ($classNotifyType == $notifyType) {
-            $result = $notifyCallback->handle(self::SP_NAME, $notifyData);
-            exit($this->notifyResponse($result));
+            try {
+                $result = $notifyCallback->handle(self::SP_NAME, $notifyData);
+                exit($this->notifyResponse($result));
+            } catch (\Exception $e) {
+                exit($this->notifyResponse(false));
+            }
         }
         throw new \InvalidArgumentException('异步通知类型与回调处理类型不匹配');
     }

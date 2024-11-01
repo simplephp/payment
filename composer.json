@@ -6,10 +6,7 @@
   "autoload": {
     "psr-4": {
       "Simplephp\\PaymentSdk\\": "src/"
-    },
-    "files": [
-      "src/functions.php"
-    ]
+    }
   },
   "authors": [
     {
@@ -21,7 +18,7 @@
     "php": ">=7.1.2",
     "ext-json": "*",
     "wechatpay/wechatpay": "^1.4.10",
-    "simplephp/easyalipaysdk": "^2.2.5",
+    "simplephp/easyalipaysdk": "^2.2.7",
     "ext-openssl": "*"
   }
 }

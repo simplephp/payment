@@ -7,7 +7,8 @@ use Alipay\EasySDK\Kernel\Config;
 use Alipay\EasySDK\Kernel\MultipleFactory;
 use Simplephp\PaymentSdk\Abstracts\APayment;
 use Simplephp\PaymentSdk\Contracts\INotify;
-use Simplephp\PaymentSdk\Models\Response;
+use Simplephp\PaymentSdk\Util\Helper;
+use Simplephp\PaymentSdk\Util\Response;
 
 /**
  * Class Alipay
@@ -112,31 +113,30 @@ class Alipay extends APayment
             throw new \InvalidArgumentException('支付宝APPID不能为空');
         }
         $this->appId = $appId;
-        $appPrivateKey = $config['app_private_key'] ?? '';
-        if (empty($appPrivateKey)) {
-            throw new \InvalidArgumentException('支付宝应用私钥不能为空');
+        $merchantPrivateKey = $config['merchant_private_key'] ?? '';
+        if (empty($merchantPrivateKey)) {
+            throw new \InvalidArgumentException('请配置支付宝应用私钥 merchant_private_key');
         }
-        // 支付宝参数 alipay_public_key 和 （$alipayPublicCertPath、$alipayRootCertPath、$appPublicCertPath） 二选一
+        // 支付宝参数 alipay_public_key 和 （$alipayPublicCertPath、$alipayRootCertPath、$merchantCertPath） 二选一
         $alipayPublicKey = $config['alipay_public_key'] ?? '';
         $alipayPublicCertPath = $config['alipay_public_cert_path'] ?? '';
         $alipayRootCertPath = $config['alipay_root_cert_path'] ?? '';
-        $appPublicCertPath = $config['app_public_cert_path'] ?? '';
-        if (empty($alipayPublicKey) && (empty($alipayPublicCertPath) || empty($alipayRootCertPath) || empty($appPublicCertPath))) {
-            throw new \InvalidArgumentException('支付宝参数 alipay_public_key 和 （alipay_public_cert_path、alipay_root_cert_path、app_public_cert_path）二选一');
+        $merchantCertPath = $config['merchant_cert_path'] ?? '';
+        if (empty($alipayPublicKey) && (empty($alipayPublicCertPath) || empty($alipayRootCertPath) || empty($merchantCertPath))) {
+            throw new \InvalidArgumentException('支付宝参数 alipay_public_key 和 （alipay_public_cert_path、alipay_root_cert_path、merchant_cert_path）二选一');
         }
         $options = new Config();
         $options->protocol = 'https';
         $options->gatewayHost = 'openapi.alipay.com';
         $options->signType = 'RSA2';
         $options->appId = $appId;
-        // 为避免私钥随源码泄露，推荐从文件中读取私钥字符串而不是写入源码中
-        $options->merchantPrivateKey = $appPrivateKey;
-        if ($alipayPublicKey) {
+        $options->merchantPrivateKey = $merchantPrivateKey;
+        if (!empty($alipayPublicKey)) {
             $options->alipayPublicKey = $alipayPublicKey;
         } else {
             $options->alipayCertPath = $alipayPublicCertPath; // '<-- 请填写您的支付宝公钥证书文件路径，例如：/foo/alipayCertPublicKey_RSA2.crt -->';
             $options->alipayRootCertPath = $alipayRootCertPath; //  '<-- 请填写您的支付宝根证书文件路径，例如：/foo/alipayRootCert.crt" -->';
-            $options->merchantCertPath = $appPublicCertPath; // '<-- 请填写您的应用公钥证书文件路径，例如：/foo/appCertPublicKey_2019051064521003.crt -->';
+            $options->merchantCertPath = $merchantCertPath; // '<-- 请填写您的应用公钥证书文件路径，例如：/foo/appCertPublicKey_2019051064521003.crt -->';
         }
         $notifyUrl = $config['notify_url'] ?? '';
         if ($notifyUrl) {
@@ -243,7 +243,7 @@ class Alipay extends APayment
             $businessOptions['product_code'] = $params['product_code'];
         }
         if (isset($params['time_expire'])) {
-            if (!isValidDateTime($params['time_expire'])) {
+            if (!Helper::isValidDateTime($params['time_expire'])) {
                 throw new \InvalidArgumentException('订单绝对超时时间格式错误');
             }
             $businessOptions['time_expire'] = $params['time_expire'];
@@ -309,7 +309,7 @@ class Alipay extends APayment
         }
         //time_expire 可选 string(32) 订单绝对超时时间。 格式为yyyy-MM-dd HH:mm:ss。超时时间范围：1m~15d。 注：time_express和timeout_express两者只需传入一个或者都不传，如果两者都传，优先使用time_expire。
         if (isset($params['time_expire'])) {
-            if (!isValidDateTime($params['time_expire'])) {
+            if (!Helper::isValidDateTime($params['time_expire'])) {
                 throw new \InvalidArgumentException('订单绝对超时时间格式错误');
             }
         }
@@ -389,7 +389,7 @@ class Alipay extends APayment
         }
         //time_expire 可选 string(32) 订单绝对超时时间。 格式为yyyy-MM-dd HH:mm:ss。超时时间范围：1m~15d。 注：time_express和timeout_express两者只需传入一个或者都不传，如果两者都传，优先使用time_expire。
         if (isset($params['time_expire'])) {
-            if (!isValidDateTime($params['time_expire'])) {
+            if (!Helper::isValidDateTime($params['time_expire'])) {
                 throw new \InvalidArgumentException('订单绝对超时时间格式错误');
             }
         }
@@ -539,7 +539,7 @@ class Alipay extends APayment
             $paymentWeb = $paymentWeb->batchOptional($businessOptions);
         }
         $response = $paymentWeb->preCreate($subject, $outTradeNo, $totalAmount);
-        return $this->createResponse('alipay.trade.precreate', $response);
+        return $this->parseResponse('alipay.trade.precreate', $response);
     }
 
     /**
@@ -573,7 +573,7 @@ class Alipay extends APayment
         }
         $outTradeNo = $params['out_trade_no'] ?? '';
         $response = $payment->query($outTradeNo);
-        return $this->createResponse('alipay.trade.query', $response);
+        return $this->parseResponse('alipay.trade.query', $response);
     }
 
     /**
@@ -704,7 +704,7 @@ class Alipay extends APayment
         }
         $method = 'alipay.user.agreement.query';
         $response = $this->instance::util()->generic()->execute($method, [], $businessOptions);
-        return $this->createResponse($method, $response);
+        return $this->parseResponse($method, $response);
     }
 
     /**
@@ -759,7 +759,7 @@ class Alipay extends APayment
         }
         $method = 'alipay.user.agreement.unsign';
         $response = $this->instance::util()->generic()->execute($method, [], $businessOptions);
-        return $this->createResponse($method, $response);
+        return $this->parseResponse($method, $response);
     }
 
     /**
@@ -780,7 +780,7 @@ class Alipay extends APayment
         ];
         $method = 'alipay.user.agreement.executionplan.modify';
         $response = $this->instance::util()->generic()->execute($method, [], $businessOptions);
-        return $this->createResponse($method, $response);
+        return $this->parseResponse($method, $response);
     }
 
     /**
@@ -842,7 +842,7 @@ class Alipay extends APayment
             $payment = $payment->batchOptional($businessOptions);
         }
         $response = $payment->refund($params['out_trade_no'], $params['refund_amount']);
-        return $this->createResponse('alipay.trade.refund', $response);
+        return $this->parseResponse('alipay.trade.refund', $response);
     }
 
     /**
@@ -880,7 +880,7 @@ class Alipay extends APayment
         $outTradeNo = $params['out_trade_no'] ?? '';
         $outRequestNo = $params['out_request_no'];
         $response = $payment->queryRefund($outTradeNo, $outRequestNo);
-        return $this->createResponse('alipay.trade.fastpay.refund.query', $response);
+        return $this->parseResponse('alipay.trade.fastpay.refund.query', $response);
     }
 
     /**
@@ -919,14 +919,14 @@ class Alipay extends APayment
         $businessOptions['dback_amount'] = $params['dback_amount'];
         // bank_ack_time 可选 string(32) 银行卡冲退成功时间，银行响应时间，格式为yyyy-MM-dd HH:mm:ss
         if (isset($params['bank_ack_time'])) {
-            if (!isValidDateTime($params['bank_ack_time'])) {
+            if (!Helper::isValidDateTime($params['bank_ack_time'])) {
                 throw new \InvalidArgumentException('银行卡冲退成功时间格式错误');
             }
             $businessOptions['bank_ack_time'] = $params['bank_ack_time'];
         }
         // est_bank_receipt_time 可选 string(32) 银行卡冲退预计到账时间，格式为yyyy-MM-dd HH:mm:ss
         if (isset($params['est_bank_receipt_time'])) {
-            if (!isValidDateTime($params['est_bank_receipt_time'])) {
+            if (!Helper::isValidDateTime($params['est_bank_receipt_time'])) {
                 throw new \InvalidArgumentException('银行卡冲退预计到账时间格式错误');
             }
             $businessOptions['est_bank_receipt_time'] = $params['est_bank_receipt_time'];
@@ -934,7 +934,7 @@ class Alipay extends APayment
         $bizParams = [];
         $method = 'alipay.trade.refund.depositback.completed';
         $response = $this->instance::util()->generic()->execute($method, $businessOptions, $bizParams);
-        return $this->createResponse($method, $response);
+        return $this->parseResponse($method, $response);
 
     }
 
@@ -965,7 +965,7 @@ class Alipay extends APayment
         }
         $outTradeNo = $params['out_trade_no'] ?? '';
         $response = $payment->cancel($outTradeNo);
-        return $this->createResponse('alipay.trade.cancel', $response);
+        return $this->parseResponse('alipay.trade.cancel', $response);
     }
 
     /**
@@ -1000,7 +1000,7 @@ class Alipay extends APayment
             throw new \InvalidArgumentException('账单时间不能为空');
         }
 
-        if (!isValidDateTime($params['bill_date'], 'Y-m-d')) {
+        if (!Helper::isValidDateTime($params['bill_date'], 'Y-m-d')) {
             throw new \InvalidArgumentException('账单时间格式错误');
         }
 
@@ -1016,7 +1016,7 @@ class Alipay extends APayment
         $billType = $params['bill_type'] ?? 'trade';
         $billDate = $params['bill_date'] ?? '';
         $response = $payment->downloadBill($billType, $billDate);
-        return $this->createResponse('alipay.data.dataservice.bill.downloadurl.query', $response);
+        return $this->parseResponse('alipay.data.dataservice.bill.downloadurl.query', $response);
     }
 
 
@@ -1048,7 +1048,7 @@ class Alipay extends APayment
         }
         $outTradeNo = $params['out_trade_no'] ?? '';
         $response = $payment->close($outTradeNo);
-        return $this->createResponse('alipay.trade.close', $response);
+        return $this->parseResponse('alipay.trade.close', $response);
     }
 
     /**
@@ -1108,7 +1108,7 @@ class Alipay extends APayment
         if (!isset($periodRuleTmpParams['execute_time'])) {
             throw new \InvalidArgumentException('请设置支付宝签约首次执行时间');
         }
-        if (!isValidDateTime($periodRuleTmpParams['execute_time'], 'Y-m-d')) {
+        if (!Helper::isValidDateTime($periodRuleTmpParams['execute_time'], 'Y-m-d')) {
             throw new \InvalidArgumentException('支付宝签约首次执行时间格式错误');
         }
         // 周期类型使用 MONTH 的时候，计划扣款时间 execute_time 不允许传 28 日之后的日期（可以传 28 日）
@@ -1272,8 +1272,12 @@ class Alipay extends APayment
         }
         $classNotifyType = $notifyCallback->getNotifyType();
         if ($classNotifyType == $notifyType) {
-            $result = $notifyCallback->handle(self::SP_NAME, $notifyData);
-            exit($this->notifyResponse($result));
+            try {
+                $result = $notifyCallback->handle(self::SP_NAME, $notifyData);
+                exit($this->notifyResponse($result));
+            } catch (\Exception $e) {
+                exit($this->notifyResponse(false));
+            }
         }
         throw new \InvalidArgumentException('异步通知类型与回调处理类型不匹配');
     }
@@ -1283,19 +1287,19 @@ class Alipay extends APayment
      * @param Model $response
      * @return Response
      */
-    protected function createResponse(string $method, Model $response): Response
+    protected function parseResponse(string $method, Model $response)
     {
         $responseName = str_replace('.', '_', $method) . '_response';
         $data = null;
-        $status = Response::STATUS_ERROR;
         if ($response->code == '10000') {
-            $status = Response::STATUS_SUCCESS;
             $responseData = json_decode($response->httpBody, true);
             if (isset($responseData[$responseName])) {
                 $data = $responseData[$responseName];
             }
+            return Response::success($data);
+        } else {
+            return Response::error($response->code, $response->msg, $data, $response->subCode, $response->subMsg);
         }
-        return new Response($status, $response->code, $response->msg, $data, $response->subCode, $response->subMsg);
     }
 
     /**

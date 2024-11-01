@@ -10,25 +10,51 @@ use Simplephp\PaymentSdk\Exception\PaymentException;
 require_once __DIR__ . '/../vendor/autoload.php';
 date_default_timezone_set('Asia/Shanghai');
 
+/**********************支付配置******************************/
 $config = [
     'alipay' => [
         'default' => [
             // 支付宝-应用ID-必填
-            'app_id' => '2021**1256',
+            'app_id' => '2021***408',
             // 支付宝-应用私钥-必填
-            'app_private_key' => 'MIIE***cyQw==',
-            // 支付宝-支付宝公钥-选填（alipay_public_key 和 （alipay_public_cert_path、alipay_root_cert_path、app_public_cert_path）二选一
-            'alipay_public_key' => 'MIIBI***AQAB',
+            'merchant_private_key' => 'MIIE***m3I=',
+            // 支付宝-支付宝公钥-选填（alipay_public_key【密钥模式】 和 （alipay_public_cert_path、alipay_root_cert_path、merchant_cert_path【证书模式】）二选一
+            'alipay_public_key' => 'MIIB***AQAB',
             // 支付宝-支付宝公钥证书路径-选填
             'alipay_public_cert_path' => '',
             // 支付宝-支付宝根证书路径-选填
-            'alipay_root_cert_path' => __DIR__.'/cert/alipayRootCert.crt',
+            'alipay_root_cert_path' => '',
             // 支付宝-应用公钥证书文件路径-选填
-            'app_public_cert_path' =>  __DIR__.'/cert/appCertPublicKey_2016082000295641.crt',
+            'merchant_cert_path' => '',
             // 支付宝-同步通知地址-选填
-            'return_url' => 'https://www.nineton.cn/alipay/return',
+            'return_url' => 'https://www.***.cn/alipay/return',
             // 支付宝-异步通知地址-选填
-            'notify_url' => 'https://www.nineton.cn/alipay/notify',
+            'notify_url' => 'https://www.***.cn/alipay/notify',
+            // 支付宝-周期扣款/商家扣款-选填 product_code：产品码 周期扣款：CYCLE_PAY_AUTH：商家扣款：GENERAL_WITHHOLDING
+            'product_code' => Alipay::GENERAL_WITHHOLDING,
+            // 支付宝-周期扣款/商家扣款-选填 sign_scene：签约场景码，具体参数请商家完成产品签约后，根据业务场景或用户购买商品的差异性对应新增模版及场景码。 说明：登录 商家平台 > 产品大全 > 商家扣款 > 功能管理 > 修改 > 设置模版 可新增模版及场景码。商家在确认新增模版及场景码完成后，签约接入时需要传入模版中实际填写的场景码。场景码格式详情可查看
+            'sign_scene' => 'INDUSTRY|DEFAULT_SCENE',
+            // 支付宝-周期扣款/商家扣款-选填 签约个人产品码
+            'personal_product_code' => 'CYCLE_PAY_AUTH_P',
+            //'mode' => Pay::MODE_NORMAL,
+        ],
+        'yy03' => [
+            // 支付宝-应用ID-必填
+            'app_id' => '2021*****408',
+            // 支付宝-应用私钥-必填
+            'merchant_private_key' => 'MIIE****m3I=',
+            // 支付宝-支付宝公钥-选填（alipay_public_key 和 （alipay_public_cert_path、alipay_root_cert_path、merchant_cert_path）二选一
+            'alipay_public_key' => 'MIIB***AQAB',
+            // 支付宝-支付宝公钥证书路径-选填
+            'alipay_public_cert_path' => __DIR__ . '/cert/alipayCertPublicKey_RSA2.crt',
+            // 支付宝-支付宝根证书路径-选填
+            'alipay_root_cert_path' => __DIR__ . '/cert/alipayRootCert.crt',
+            // 支付宝-应用公钥证书文件路径-选填
+            'merchant_cert_path' => __DIR__ . '/cert/appCertPublicKey_2019051064521003.crt',
+            // 支付宝-同步通知地址-选填
+            'return_url' => 'https://www.***.cn/alipay/return',
+            // 支付宝-异步通知地址-选填
+            'notify_url' => 'https://www.***.cn/alipay/notify',
             // 支付宝-周期扣款/商家扣款-选填 product_code：产品码 周期扣款：CYCLE_PAY_AUTH：商家扣款：GENERAL_WITHHOLDING
             'product_code' => Alipay::GENERAL_WITHHOLDING,
             // 支付宝-周期扣款/商家扣款-选填 sign_scene：签约场景码，具体参数请商家完成产品签约后，根据业务场景或用户购买商品的差异性对应新增模版及场景码。 说明：登录 商家平台 > 产品大全 > 商家扣款 > 功能管理 > 修改 > 设置模版 可新增模版及场景码。商家在确认新增模版及场景码完成后，签约接入时需要传入模版中实际填写的场景码。场景码格式详情可查看
@@ -47,32 +73,59 @@ $config = [
             // 微信-v3商户秘钥-必填
             'api_v3_key' => 'RIGK***ZjZ3',
             // 微信-商户私钥文件地址-必填
-            'merchant_private_key_file_path' => __DIR__ . '/cert/apiclient_key.pem',
+            'merchant_private_key_path' => __DIR__ . '/cert/apiclient_key.pem',
             // 微信-商户API证书序列号-必填
             'merchant_certificate_serial' => '6645***D0744',
             // 微信-支付平台证书地址-必填，使用 composer 生成
             // composer exec CertificateDownloader.php -- -k ${apiV3key} -m ${mchId} -f ${mchPrivateKeyFilePath} -s ${mchSerialNo} -o ${outputFilePath}
-            'platform_certificate_file_path' => __DIR__ . '/cert/wechatpay_61A54B44E797D26EAD2B47466985513AEE09F60C.pem',
+            'platform_certificate_file_path' => __DIR__ . '/cert/wechatpay_61A5***F60C.pem',
             // 支付宝-同步通知地址-选填
-            'return_url' => 'https://www.nineton.cn/alipay/return',
+            'return_url' => 'https://www.***.cn/alipay/return',
             // 支付宝-异步通知地址-选填
-            'notify_url' => 'https://www.nineton.cn/alipay/notify',
+            'notify_url' => 'https://www.***.cn/alipay/notify',
             // 选填-默认为正常模式。可选为： MODE_NORMAL, MODE_SERVICE
             //'mode' => Pay::MODE_NORMAL,
         ]
     ],
 ];
+/**********************支付配置******************************/
+
 /****************************************************
  * 支付宝-app支付
  * @link https://opendocs.alipay.com/open/cd12c885_alipay.trade.app.pay
  ****************************************************/
+try {
+    $response = Payment::config($config)->alipay()->agreementSign([
+        'access_params' => [
+            'channel' => Alipay::QRCODE_CHANNEL, //【必选参数】当前支付接入方式， Alipay::ALIPAYAPP_CHANNEL（钱包h5页面签约） Alipay::QRCODE_CHANNEL(扫码签约) Alipay::QRCODEORSMS_CHANNEL(扫码签约或者短信签约)
+        ],
+        'period_rule_params' => [ //【必选参数】周期规则参数
+            'period_type' => Alipay::PERIOD_TYPE_DAY, //【必选参数】周期类型period_type是周期扣款产品必填，枚举值为DAY和MONTH。 DAY即扣款周期按天计，MONTH代表扣款周期按自然月。
+            'period' => 7,//【必选参数】周期数period是周期扣款产品必填。与另一参数period_type组合使用确定扣款周期，例如period_type为DAY，period=90，则扣款周期为90天。
+            'execute_time' => date('Y-m-d', time() + 86400), // 【必选参数】首次执行时间execute_time是周期扣款产品必填，即商户发起首次扣款的时间。精确到日，格式为yyyy-MM-dd
+            'single_amount' => 10.99, //【必选参数】单次扣款最大金额single_amount是周期扣款产品必填，即每次发起扣款时限制的最大金额，单位为元。商户每次发起扣款都不允许大于此金额。
+            //'total_amount' => 100.99, //【可选参数】总金额限制，单位为元，不建议控制，除非业务有需求。如果传入此参数，商户多次扣款的累计金额不允许超过此金额。
+            //'total_payments' => 10, //【可选参数】总扣款次数，不建议控制，除非业务有需求。如果传入此参数，商户累计发起扣款的次数不允许超过此次数。
+        ],
+        //'effect_time' => 600,//【可选参数】设置签约请求的有效时间，单位为秒，不建议控制，除非业务有需求。如传入600，商户发起签约请求到用户进入支付宝签约页面的时间差不能超过10分钟
+        // 'external_agreement_no' => 'test20190701',//【可选参数】商户签约号，代扣协议中标示用户的唯一签约号（确保在商户系统中唯一）。 格式规则：支持大写小写字母和数字，最长32位。 商户系统按需传入，如果同一用户在同一产品码、同一签约场景下，签订了多份代扣协议，那么需要指定并传入该值。
+        //'external_logon_id' => '13888888888',//【可选参数】用户在商户网站的登录账号，用于在签约页面展示，如果为空，则不展示
+        //'sign_notify_url' => 'https://www.example.com/alipay/receiveSignNotify',//【可选参数】签约成功后商户用于接收异步通知的地址。如果不传入，签约与支付的异步通知都会发到外层notify_url参数传入的地址；如果外层也未传入，签约与支付的异步通知都会发到商户appid配置的网关地址。
+    ]);
+    //echo $response . PHP_EOL;
+} catch (\InvalidArgumentException $e) {
+    echo '参数错误：' . $e->getMessage() . PHP_EOL;
+} catch (\Exception $e) {
+    echo $e->getMessage();
+}
+
 try {
     $result = Payment::config($config)->alipay()->appPay([
         'subject' => '测试订单',
         'trade_no' => 'test' . time(),
         'amount' => '0.0001',
     ]);
-    echo $result . "\n";
+    //echo $result . "\n";
 
 } catch (\InvalidArgumentException $e) {
     echo '参数错误：' . $e->getMessage();
@@ -115,6 +168,7 @@ try {
 } catch (\Exception $e) {
     echo $e->getMessage();
 }
+
 /****************************************************
  * 支付宝-独立签约后扣款 注意：配置：product_code、sign_scene 必须配置
  * @link https://opendocs.alipay.com/open/8bccfa0b_alipay.user.agreement.page.sign
@@ -141,7 +195,7 @@ try {
 } catch (\InvalidArgumentException $e) {
     echo '参数错误：' . $e->getMessage();
 } catch (\Exception $e) {
-    echo $e->getMessage();
+    echo '异常'.get_class($e).'---'.$e->getMessage().PHP_EOL;
 }
 
 /****************************************************

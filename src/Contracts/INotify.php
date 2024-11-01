@@ -21,7 +21,7 @@ interface INotify
     public function getNotifyType(): string;
 
     /**
-     * @param string $notifyType
+     * @param string $serviceProvider
      * @param array $notifyData
      * @return mixed
      */

@@ -1,7 +1,7 @@
 <?php
 /**
  * 异步通知示例
- * @file examples/pay.php
+ * @file examples/notify.php
  */
 use Simplephp\PaymentSdk\Abstracts\APayNotify;
 use Simplephp\PaymentSdk\Abstracts\ARefundNotify;
@@ -13,25 +13,51 @@ use Simplephp\PaymentSdk\Provider\Alipay;
 require_once __DIR__ . '/../vendor/autoload.php';
 date_default_timezone_set('Asia/Shanghai');
 
+/**********************支付配置******************************/
 $config = [
     'alipay' => [
         'default' => [
             // 支付宝-应用ID-必填
-            'app_id' => '2021**1256',
+            'app_id' => '2021***408',
             // 支付宝-应用私钥-必填
-            'app_private_key' => 'MIIE***cyQw==',
-            // 支付宝-支付宝公钥-选填（alipay_public_key 和 （alipay_public_cert_path、alipay_root_cert_path、app_public_cert_path）二选一
-            'alipay_public_key' => 'MIIBI***AQAB',
+            'merchant_private_key' => 'MIIE***m3I=',
+            // 支付宝-支付宝公钥-选填（alipay_public_key【密钥模式】 和 （alipay_public_cert_path、alipay_root_cert_path、merchant_cert_path【证书模式】）二选一
+            'alipay_public_key' => 'MIIB***AQAB',
             // 支付宝-支付宝公钥证书路径-选填
             'alipay_public_cert_path' => '',
             // 支付宝-支付宝根证书路径-选填
-            'alipay_root_cert_path' => __DIR__.'/cert/alipayRootCert.crt',
+            'alipay_root_cert_path' => '',
             // 支付宝-应用公钥证书文件路径-选填
-            'app_public_cert_path' =>  __DIR__.'/cert/appCertPublicKey_2016082000295641.crt',
+            'merchant_cert_path' => '',
             // 支付宝-同步通知地址-选填
-            'return_url' => 'https://www.nineton.cn/alipay/return',
+            'return_url' => 'https://www.***.cn/alipay/return',
             // 支付宝-异步通知地址-选填
-            'notify_url' => 'https://www.nineton.cn/alipay/notify',
+            'notify_url' => 'https://www.***.cn/alipay/notify',
+            // 支付宝-周期扣款/商家扣款-选填 product_code：产品码 周期扣款：CYCLE_PAY_AUTH：商家扣款：GENERAL_WITHHOLDING
+            'product_code' => Alipay::GENERAL_WITHHOLDING,
+            // 支付宝-周期扣款/商家扣款-选填 sign_scene：签约场景码，具体参数请商家完成产品签约后，根据业务场景或用户购买商品的差异性对应新增模版及场景码。 说明：登录 商家平台 > 产品大全 > 商家扣款 > 功能管理 > 修改 > 设置模版 可新增模版及场景码。商家在确认新增模版及场景码完成后，签约接入时需要传入模版中实际填写的场景码。场景码格式详情可查看
+            'sign_scene' => 'INDUSTRY|DEFAULT_SCENE',
+            // 支付宝-周期扣款/商家扣款-选填 签约个人产品码
+            'personal_product_code' => 'CYCLE_PAY_AUTH_P',
+            //'mode' => Pay::MODE_NORMAL,
+        ],
+        'yy03' => [
+            // 支付宝-应用ID-必填
+            'app_id' => '2021*****408',
+            // 支付宝-应用私钥-必填
+            'merchant_private_key' => 'MIIE****m3I=',
+            // 支付宝-支付宝公钥-选填（alipay_public_key 和 （alipay_public_cert_path、alipay_root_cert_path、merchant_cert_path）二选一
+            'alipay_public_key' => 'MIIB***AQAB',
+            // 支付宝-支付宝公钥证书路径-选填
+            'alipay_public_cert_path' => __DIR__ . '/cert/alipayCertPublicKey_RSA2.crt',
+            // 支付宝-支付宝根证书路径-选填
+            'alipay_root_cert_path' => __DIR__ . '/cert/alipayRootCert.crt',
+            // 支付宝-应用公钥证书文件路径-选填
+            'merchant_cert_path' => __DIR__ . '/cert/appCertPublicKey_2019051064521003.crt',
+            // 支付宝-同步通知地址-选填
+            'return_url' => 'https://www.***.cn/alipay/return',
+            // 支付宝-异步通知地址-选填
+            'notify_url' => 'https://www.***.cn/alipay/notify',
             // 支付宝-周期扣款/商家扣款-选填 product_code：产品码 周期扣款：CYCLE_PAY_AUTH：商家扣款：GENERAL_WITHHOLDING
             'product_code' => Alipay::GENERAL_WITHHOLDING,
             // 支付宝-周期扣款/商家扣款-选填 sign_scene：签约场景码，具体参数请商家完成产品签约后，根据业务场景或用户购买商品的差异性对应新增模版及场景码。 说明：登录 商家平台 > 产品大全 > 商家扣款 > 功能管理 > 修改 > 设置模版 可新增模版及场景码。商家在确认新增模版及场景码完成后，签约接入时需要传入模版中实际填写的场景码。场景码格式详情可查看
@@ -50,21 +76,22 @@ $config = [
             // 微信-v3商户秘钥-必填
             'api_v3_key' => 'RIGK***ZjZ3',
             // 微信-商户私钥文件地址-必填
-            'merchant_private_key_file_path' => __DIR__ . '/cert/apiclient_key.pem',
+            'merchant_private_key_path' => __DIR__ . '/cert/apiclient_key.pem',
             // 微信-商户API证书序列号-必填
             'merchant_certificate_serial' => '6645***D0744',
             // 微信-支付平台证书地址-必填，使用 composer 生成
             // composer exec CertificateDownloader.php -- -k ${apiV3key} -m ${mchId} -f ${mchPrivateKeyFilePath} -s ${mchSerialNo} -o ${outputFilePath}
-            'platform_certificate_file_path' => __DIR__ . '/cert/wechatpay_61A54B44E797D26EAD2B47466985513AEE09F60C.pem',
+            'platform_certificate_file_path' => __DIR__ . '/cert/wechatpay_61A5***F60C.pem',
             // 支付宝-同步通知地址-选填
-            'return_url' => 'https://www.nineton.cn/alipay/return',
+            'return_url' => 'https://www.***.cn/alipay/return',
             // 支付宝-异步通知地址-选填
-            'notify_url' => 'https://www.nineton.cn/alipay/notify',
+            'notify_url' => 'https://www.***.cn/alipay/notify',
             // 选填-默认为正常模式。可选为： MODE_NORMAL, MODE_SERVICE
             //'mode' => Pay::MODE_NORMAL,
         ]
     ],
 ];
+/**********************支付配置******************************/
 
 /****************************************************
  * 支付宝-交易异步通知
@@ -126,7 +153,8 @@ class TestPayNotify extends APayNotify
          * [buyer_logon_id] => 178****8191
          * [point_amount] => 0.00
          */
-        return false;
+        // 业务逻辑处理，处理成功返回 true，处理失败返回 false, 默认是 false
+        return true;
     }
 }
 
@@ -140,6 +168,7 @@ try {
 } catch (\Exception $e) {
     echo $e->getMessage() . PHP_EOL;
 }
+
 
 /****************************************************
  * 支付宝-签约异步通知
